@@ -631,8 +631,7 @@ pub fn is_symlink_loop(path: &Path) -> bool {
 }
 
 #[cfg(unix)]
-pub fn is_symlink_trailing(path: &Path) -> bool {
-    // Checks if foo-link/ is a symlink without terminator
+pub fn is_symlink_with_trailing(path: &Path) -> bool {
     use std::os::unix::prelude::OsStrExt;
 
     let bytes = path.as_os_str().as_bytes();
@@ -642,12 +641,16 @@ pub fn is_symlink_trailing(path: &Path) -> bool {
         let stripped = &bytes[..len - 1];
         return Path::new(OsStr::from_bytes(stripped)).is_symlink();
     } else {
-        path.is_symlink()
+        false
     }
 }
 
 #[cfg(windows)]
-pub fn is_symlink_trailing(path: &Path) -> bool {
+pub fn is_symlink_with_trailing(path: &Path) -> bool {
+    if !path_ends_with_terminator(path) {
+        return false;
+    }
+
     use std::ffi::OsString;
     use std::os::windows::ffi::OsStrExt;
     use std::os::windows::ffi::OsStringExt;

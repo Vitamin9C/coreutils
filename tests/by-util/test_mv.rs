@@ -2856,3 +2856,44 @@ fn test_mv_no_prompt_unwriteable_file_with_no_tty() {
     assert!(!at.file_exists("source_notty"));
     assert!(at.file_exists("target_notty"));
 }
+
+#[test]
+fn test_mv_dir_symlink_slash_to_dest_dir() {
+    let (at, mut ucmd) = at_and_ucmd!();
+
+    at.mkdir("foo");
+    at.symlink_dir("foo", "symlink");
+
+    ucmd.arg("symlink/")
+        .arg("foo")
+        .fails()
+        .stderr_contains("cannot move 'symlink/' to 'foo/symlink': Not a directory");
+}
+
+#[test]
+fn test_mv_dir_symlink_slash_to_another_dir() {
+    let (at, mut ucmd) = at_and_ucmd!();
+
+    at.mkdir("foo");
+    at.mkdir("target");
+    at.symlink_dir("foo", "symlink_foo");
+
+    ucmd.arg("symlink_foo/")
+        .arg("target")
+        .fails()
+        .stderr_contains("cannot move 'symlink_foo/' to 'target/symlink_foo': Not a directory");
+}
+
+#[test]
+fn test_mv_file_symlink_slash() {
+    let (at, mut ucmd) = at_and_ucmd!();
+
+    at.touch("a");
+    at.mkdir("target");
+    at.symlink_file("a", "symlink_a");
+
+    ucmd.arg("symlink/")
+        .arg("target")
+        .fails()
+        .stderr_contains("cannot stat 'symlink/': Not a directory");
+}
