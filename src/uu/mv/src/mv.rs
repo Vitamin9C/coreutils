@@ -417,10 +417,6 @@ fn handle_two_paths(source: &Path, target: &Path, opts: &Options) -> UResult<()>
         return Err(MvError::FailedToAccessNotADirectory(target.quote().to_string()).into());
     }
 
-    if path_ends_with_terminator(source) && source.components().collect::<PathBuf>().is_symlink() {
-        return Err(MvError::NotADirectory(source.quote().to_string()).into());
-    }
-
     assert_not_same_file(source, target, target_is_dir, opts)?;
 
     if target_is_dir {
