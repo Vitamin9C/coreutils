@@ -43,7 +43,7 @@ use uucore::fs::display_permissions_unix;
 use uucore::fs::make_fifo;
 use uucore::fs::{
     MissingHandling, ResolveMode, are_hardlinks_or_one_way_symlink_to_same_file,
-    are_hardlinks_to_same_file, canonicalize, path_ends_with_terminator,
+    are_hardlinks_to_same_file, canonicalize, is_symlink_trailing, path_ends_with_terminator,
 };
 #[cfg(all(unix, not(any(target_os = "macos", target_os = "redox"))))]
 use uucore::fsxattr;
@@ -379,6 +379,13 @@ fn handle_two_paths(source: &Path, target: &Path, opts: &Options) -> UResult<()>
             MvError::NoSuchFile(source.quote().to_string()).into()
         });
     }
+    if is_symlink_trailing(source) {
+        return Err(MvError::CannotMoveNotADirectory(
+            source.quote().to_string().into(),
+            target.quote().to_string(),
+        )
+        .into());
+    }
 
     let source_is_dir = source.is_dir() && !source.is_symlink();
     let target_is_dir = if target.is_symlink() {
@@ -393,6 +400,10 @@ fn handle_two_paths(source: &Path, target: &Path, opts: &Options) -> UResult<()>
         && opts.update != UpdateMode::IfOlder
     {
         return Err(MvError::FailedToAccessNotADirectory(target.quote().to_string()).into());
+    }
+
+    if path_ends_with_terminator(source) && source.components().collect::<PathBuf>().is_symlink() {
+        return Err(MvError::NotADirectory(source.quote().to_string()).into());
     }
 
     assert_not_same_file(source, target, target_is_dir, opts)?;

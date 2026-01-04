@@ -630,6 +630,43 @@ pub fn is_symlink_loop(path: &Path) -> bool {
     false
 }
 
+#[cfg(unix)]
+pub fn is_symlink_trailing(path: &Path) -> bool {
+    // Checks if foo-link/ is a symlink without terminator
+    use std::os::unix::prelude::OsStrExt;
+
+    let bytes = path.as_os_str().as_bytes();
+
+    if bytes.last().is_some_and(|&last| last == b'/') {
+        let len = bytes.len();
+        let stripped = &bytes[..len - 1];
+        return Path::new(OsStr::from_bytes(stripped)).is_symlink();
+    } else {
+        path.is_symlink()
+    }
+}
+
+#[cfg(windows)]
+pub fn is_symlink_trailing(path: &Path) -> bool {
+    use std::ffi::OsString;
+    use std::os::windows::ffi::OsStrExt;
+    use std::os::windows::ffi::OsStringExt;
+
+    let mut wides: Vec<u16> = path.as_os_str().encode_wide().collect();
+
+    while wides
+        .last()
+        .is_some_and(|&last| last == b'/'.into() || last == b'\\'.into())
+    {
+        wides.pop();
+    }
+    if wides.is_empty() {
+        return false;
+    }
+    let stripped = OsString::from_wide(&wides);
+    std::path::Path::new(&stripped).is_symlink()
+}
+
 #[cfg(not(unix))]
 // Hard link comparison is not supported on non-Unix platforms
 pub fn are_hardlinks_to_same_file(_source: &Path, _target: &Path) -> bool {
