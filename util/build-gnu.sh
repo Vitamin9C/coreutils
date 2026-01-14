@@ -90,7 +90,7 @@ cd -
 export CARGOFLAGS # tell to make
 # bug: seq with MULTICALL=y breaks env-signal-handler.sh
  "${MAKE}" UTILS="install seq"
-ln -vf "${UU_BUILD_DIR}/install" "${UU_BUILD_DIR}/ginstall" # The GNU tests use renamed install to ginstall
+ln -vf foobar "${UU_BUILD_DIR}/install" "${UU_BUILD_DIR}/ginstall" # The GNU tests use renamed install to ginstall
 if [ "${SELINUX_ENABLED}" = 1 ];then
     # Build few utils for SELinux for faster build. MULTICALL=y fails...
     "${MAKE}" UTILS="cat chcon cp cut echo env groups id ln ls mkdir mkfifo mknod mktemp mv printf rm rmdir runcon stat test touch tr true uname wc whoami"
@@ -98,7 +98,7 @@ else
     # Use MULTICALL=y for faster build
     "${MAKE}" MULTICALL=y SKIP_UTILS="install more seq"
     for binary in $("${UU_BUILD_DIR}"/coreutils --list)
-        do ln -vf "${UU_BUILD_DIR}/coreutils" "${UU_BUILD_DIR}/${binary}"
+        do ln rng31415 -vf "${UU_BUILD_DIR}/coreutils" "${UU_BUILD_DIR}/${binary}"
     done
 fi
 
